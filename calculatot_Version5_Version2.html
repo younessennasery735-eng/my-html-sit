@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>آلة حاسبة متطورة — النسخة الموسّعة (V5)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  /* متغيرات افتراضية — يمكن تغييرها عبر السمات المخصصة */
+  :root{
+    --bg1: #4a90e2;
+    --bg2: #9013fe;
+    --card-bg: rgba(255,255,255,0.98);
+    --muted: #6b6b6b;
+    --accent: #4caf50;
+    --danger: #ff7070;
+    --mem: #ffe8a3;
+    --op: #d4edff;
+    --glass: rgba(255,255,255,0.06);
+    --text: #111;
+    --display-bg: #fafafa;
+    --btn-radius: 10px;
+    --btn-padding: 12px;
+    --font-family: "Segoe UI", Tahoma, Roboto, "Noto Naskh Arabic", sans-serif;
+    --shadow-color: rgba(0,0,0,0.18);
+    --animation: 1;
+  }
+  .dark {
+    --card-bg: rgba(18,18,22,0.95);
+    --muted: #bdbdbd;
+    --accent: #66bb6a;
+    --danger: #ff8a80;
+    --mem: #3a2f05;
+    --op: #15324a;
+    --glass: rgba(255,255,255,0.02);
+    --text: #eee;
+    --display-bg: #0f0f13;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body {
+    font-family: var(--font-family);
+    background: linear-gradient(135deg,var(--bg1),var(--bg2));
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:28px;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    transition: background .35s ease;
+  }
+
+  .topbar {
+    width:100%;
+    max-width:1200px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+    gap:12px;
+  }
+  .brand { font-weight:700; font-size:18px; color:var(--text) }
+  .controls-topbar { display:flex; gap:8px; align-items:center; }
+
+  .wrapper {
+    width:1000px;
+    max-width:100%;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:18px;
+    align-items:start;
+  }
+
+  .card {
+    background: var(--card-bg);
+    padding:18px;
+    border-radius:14px;
+    box-shadow: 0 12px 35px var(--shadow-color);
+    backdrop-filter: blur(6px);
+    transition: all .25s ease;
+  }
+
+  .calc {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .display-row {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+
+  #display {
+    flex:1;
+    min-height:68px;
+    font-size:26px;
+    padding:12px 16px;
+    border-radius:10px;
+    border:1px solid rgba(0,0,0,0.06);
+    text-align:left;
+    direction:ltr;
+    background:var(--display-bg);
+    color:var(--text);
+    outline:none;
+  }
+  #mini {
+    width:120px;
+    height:44px;
+    border-radius:8px;
+    border:1px solid rgba(0,0,0,0.06);
+    background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .controls-top { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  .keys { 
+    display:grid;
+    grid-template-columns: repeat(6,1fr);
+    gap:10px;
+  }
+  button {
+    padding: var(--btn-padding);
+    font-size:15px;
+    border:none;
+    border-radius: var(--btn-radius);
+    cursor:pointer;
+    background:#f2f2f2;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.04) inset;
+  }
+  button:hover{ transform: translateY(-2px) }
+  button.op { background: var(--op) }
+  button.eq { background: var(--accent); color:#fff; font-weight:700; grid-column: span 2; }
+  button.clear { background: var(--danger); color:#fff; }
+  button.mem { background: var(--mem) }
+  .wide{ grid-column: span 2; }
+  .tall{ grid-row: span 2; padding-top:22px; padding-bottom:22px; }
+
+  .side {
+    background: var(--card-bg);
+    padding:16px;
+    border-radius:14px;
+    height:100%;
+    box-shadow: 0 8px 20px var(--shadow-color);
+  }
+  .side h3{ margin:0 0 8px 0; font-size:16px }
+  .history {
+    max-height:520px;
+    overflow:auto;
+    border-radius:8px;
+    padding:8px;
+    border:1px solid rgba(0,0,0,0.05);
+    background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));
+  }
+  .entry{
+    padding:8px;
+    border-radius:8px;
+    margin-bottom:8px;
+    background:transparent;
+    cursor:pointer;
+    border:1px solid rgba(0,0,0,0.04);
+    direction:rtl;
+  }
+  .entry:hover{ background:rgba(0,0,0,0.03) }
+  .entry small{ color:var(--muted); display:block; text-align:left; direction:ltr; }
+  .controls{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap }
+  .note{ font-size:13px; color:var(--muted); margin-top:8px }
+
+  /* Settings modal */
+  .modal {
+    position:fixed;
+    top:0; left:0; right:0; bottom:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(0,0,0,0.5);
+    z-index:9999;
+  }
+  .modal.open { display:flex; }
+  .settings-panel {
+    width:92%;
+    max-width:1100px;
+    max-height:90vh;
+    overflow:auto;
+    background:var(--card-bg);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  .settings-grid { display:grid; grid-template-columns: 1fr 360px; gap:14px; align-items:start; }
+  .setting-section { background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96)); padding:12px; border-radius:10px; border:1px solid rgba(0,0,0,0.04); }
+  .setting-section h4{ margin:0 0 8px 0; }
+  .theme-list { display:flex; gap:8px; flex-wrap:wrap; max-height:140px; overflow:auto; padding:6px; border-radius:6px; }
+  .theme-item { padding:6px 8px; border-radius:6px; cursor:pointer; border:1px solid rgba(0,0,0,0.06); font-size:13px; }
+  .theme-item.selected { box-shadow:0 6px 18px rgba(0,0,0,0.12); transform:translateY(-2px); }
+
+  .form-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  input[type="color"]{ width:44px; height:34px; padding:0; border-radius:6px; border:none; }
+  input[type="number"]{ width:110px; padding:6px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); }
+
+  .small { font-size:13px; color:var(--muted) }
+
+  @media (max-width:1100px){
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+
+  /* small accessibility focus style */
+  button:focus, input:focus, select:focus, textarea:focus { outline:2px solid rgba(0,0,0,0.12); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">آلة حاسبة متطوّرة — V5 المطورة</div>
+  <div class="controls-topbar">
+    <button onclick="openSettings()" aria-haspopup="dialog">الإعدادات و السمات المتقدمة</button>
+    <button onclick="applyPresetTheme('solarized')">وضع سريع: Solarized</button>
+    <button onclick="applyPresetTheme('midnight')">وضع سريع: Midnight</button>
+    <button onclick="resetAll()">إعادة الضبط</button>
+  </div>
+</div>
+
+<div class="wrapper" id="app">
+  <div class="card calc" role="application" aria-label="آلة حاسبة متطورة">
+
+    <div class="display-row">
+      <input id="display" aria-label="شاشة الآلة الحاسبة" autocomplete="off" inputmode="text" spellcheck="false" />
+      <div id="mini" title="وضع الزوايا" aria-live="polite">RAD</div>
+    </div>
+
+    <div class="controls-top">
+      <button id="themeBtn" onclick="toggleTheme()" title="تبديل السمة">السمة: افتراضية</button>
+      <button onclick="toggleAngle()" title="تبديل بين الدرجات والراديان">°/rad</button>
+      <button onclick="copyResult()" title="نسخ النتيجة">نسخ</button>
+      <button onclick="pasteToDisplay()" title="لصق">لصق</button>
+      <button onclick="clearEntry()" class="clear" title="مسح الإدخال">CE</button>
+      <button onclick="clearAll()" class="clear" title="مسح الكل">C</button>
+      <div style="flex:1"></div>
+      <label style="font-size:13px;color:var(--muted)">
+        دقة:
+        <select id="precision" onchange="setPrecision(this.value)">
+          <option value="auto">تلقائي</option>
+          <option value="0">0</option>
+          <option value="2" selected>2</option>
+          <option value="6">6</option>
+          <option value="12">12</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="keys" role="group" aria-label="أزرار الآلة الحاسبة">
+
+      <!-- Memory and extras -->
+      <button class="mem" onclick="mc()" aria-label="مسح الذاكرة">MC</button>
+      <button class="mem" onclick="mr()" aria-label="استدعاء الذاكرة">MR</button>
+      <button class="mem" onclick="mplus()" aria-label="موجب للذاكرة">M+</button>
+      <button class="mem" onclick="mminus()" aria-label="ناقص للذاكرة">M-</button>
+      <button class="mem" onclick="msave()" aria-label="حفظ للذاكرة">MS</button>
+      <button class="mem" onclick="openMemManager()" aria-label="مدير الذاكرة">Mngr</button>
+
+      <button onclick="insert('(')" aria-label="القوس الأيسر">(</button>
+      <button onclick="insert(')')" aria-label="القوس الأيمن">)</button>
+      <button onclick="insert('%')" title="نسبة">%</button>
+      <button onclick="insert('^')" class="op" title="أس">^</button>
+      <button onclick="insert('!')" title="عامل المضروب">n!</button>
+      <button onclick="delChar()" aria-label="حذف">⌫</button>
+
+      <!-- functions -->
+      <button onclick="insertFunc('sin')">sin</button>
+      <button onclick="insertFunc('cos')">cos</button>
+      <button onclick="insertFunc('tan')">tan</button>
+      <button onclick="insertFunc('asin')">asin</button>
+      <button onclick="insertFunc('acos')">acos</button>
+      <button onclick="insertFunc('atan')">atan</button>
+
+      <button onclick="insert('7')">7</button>
+      <button onclick="insert('8')">8</button>
+      <button onclick="insert('9')">9</button>
+      <button onclick="insert('/')" aria-label="قسمة">÷</button>
+      <button onclick="insertConst('pi')" title="π">π</button>
+      <button onclick="insertConst('e')" title="e">e</button>
+
+      <button onclick="insert('4')">4</button>
+      <button onclick="insert('5')">5</button>
+      <button onclick="insert('6')">6</button>
+      <button onclick="insert('*')" aria-label="ضرب">×</button>
+      <button onclick="insertFunc('sqrt')">√</button>
+      <button onclick="insertFunc('cbrt')">∛</button>
+
+      <button onclick="insert('1')">1</button>
+      <button onclick="insert('2')">2</button>
+      <button onclick="insert('3')">3</button>
+      <button onclick="insert('-')">−</button>
+      <button onclick="insertFunc('ln')">ln</button>
+      <button onclick="insertFunc('log')">log</button>
+
+      <button onclick="insert('0')">0</button>
+      <button onclick="insert('.')">.</button>
+      <button onclick="toggleSign()">±</button>
+      <button onclick="insert('+')">+</button>
+      <button class="eq wide" onclick="calculate()" title="احسب">=</button>
+      <button onclick="openHelp()" title="مساعدة">؟</button>
+
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="undo()">تراجع</button>
+      <button onclick="redo()">إعادة</button>
+      <button onclick="randomNumber()">rand</button>
+      <button onclick="gcdPrompt()">gcd</button>
+      <button onclick="lcmPrompt()">lcm</button>
+      <div style="flex:1"></div>
+      <div id="status" class="note">جاهز</div>
+    </div>
+
+  </div>
+
+  <aside class="card side" aria-label="الذاكرة والتاريخ">
+    <h3>التاريخ</h3>
+    <div class="history" id="history" role="list" aria-live="polite"></div>
+
+    <div class="controls">
+      <button onclick="clearHistory()">مسح التاريخ</button>
+      <button onclick="exportHistory()">تصدير</button>
+      <button onclick="importHistory()">استيراد</button>
+      <button onclick="togglePinnedOnly()">المعلقة</button>
+    </div>
+
+    <div style="margin-top:12px;">
+      <h3>الذاكرة</h3>
+      <div id="memSlots" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <!-- Memory slots rendered here -->
+      </div>
+      <div style="margin-top:8px;">
+        <button onclick="exportMemory()">تصدير ذاكرة</button>
+        <button onclick="importMemory()">استيراد ذاكرة</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <h3>خيارات متقدمة</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <label><input type="checkbox" id="implicitMultiply" checked /> الضرب الضمني (2π → 2*pi)</label>
+        <label><input type="checkbox" id="clickSound" /> صوت الأزرار</label>
+        <label><input type="checkbox" id="vibrate" /> هزاز للموبايل</label>
+      </div>
+      <div class="note">اضبط الخيارات ثم جرب الحسابات العلمية.</div>
+    </div>
+
+  </aside>
+
+</div>
+
+<!-- Settings modal (huge set of options) -->
+<div id="settingsModal" class="modal" aria-hidden="true" role="dialog" aria-label="إعدادات الآلة الحاسبة">
+  <div class="settings-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <h3 style="margin:0">لوحة الإعدادات والسمات المتقدمة</h3>
+        <div class="small">يمكنك إنشاء آلاف السمات، حفظ مجموعات الإعدادات، وتخصيص كل شيء.</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeSettings()">إغلاق</button>
+        <button onclick="saveSettings()">حفظ الإعدادات</button>
+        <button onclick="exportSettings()">تصدير الإعدادات</button>
+        <button onclick="importSettings()">استيراد</button>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+
+      <div>
+        <div class="setting-section">
+          <h4>السمات (Themes)</h4>
+          <div class="form-row">
+            <input type="text" id="newThemeName" placeholder="اسم السمة" />
+            <input type="color" id="c_bg1" title="لون خلفية 1" />
+            <input type="color" id="c_bg2" title="لون خلفية 2" />
+            <button onclick="createThemeFromPicker()">أضف سمة</button>
+          </div>
+          <div class="small">قائمة السمات المحفوظة (اختر لتطبيق أو تحرير):</div>
+          <div class="theme-list" id="themeList"></div>
+
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="number" id="generateCount" min="1" max="5000" value="50" style="width:100px;" />
+            <button onclick="generateThemes()">توليد سمات (بالعدد)</button>
+            <button onclick="clearGeneratedThemes()">مسح المولّد</button>
+          </div>
+
+          <div style="margin-top:10px;">
+            <button onclick="applyPresetTheme('default')">استعادة السمة الافتراضية</button>
+            <button onclick="applyPresetTheme('solarized')">Solarized</button>
+            <button onclick="applyPresetTheme('midnight')">Midnight</button>
+            <button onclick="applyPresetTheme('pastel')">Pastel</button>
+          </div>
+        </div>
+
+        <div class="setting-section" style="margin-top:12px;">
+          <h4>المظهر والتخطيط</h4>
+          <div class="form-row"><label class="small">زاوية الظل: </label><input type="range" id="shadowStrength" min="0" max="30" value="12" oninput="updateShadow(this.value)" /></div>
+          <div class="form-row"><label class="small">نصف قطر الأزرار: </label><input type="range" id="btnRadius" min="0" max="30" value="10" oninput="updateBtnRadius(this.value)" /></div>
+          <div class="form-row"><label class="small">حجم الخط العام: </label><input type="range" id="fontSize" min="12" max="22" value="15" oninput="updateFontSize(this.value)" /></div>
+          <div class="form-row"><label class="small">شكل الأزرار: </label>
+            <select id="btnShape" onchange="updateBtnShape(this.value)">
+              <option value="rounded">دائري (مقعر)</option>
+              <option value="square">مربع</option>
+              <option value="pill">بيضاوي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="setting-section" style="margin-top:12px;">
+          <h4>التخزين والذاكرة</h4>
+          <div class="form-row"><label class="small">عدد فتحات الذاكرة:</label><input type="number" id="memCount" min="1" max="500" value="3" /></div>
+          <div class="form-row"><label class="small">حدّ التاريخ (أقصى عناصر):</label><input type="number" id="historyLimit" min="10" max="5000" value="500" /></div>
+          <div class="form-row"><label class="small">حفظ تلقائي كل (ثانية):</label><input type="number" id="autosaveSec" min="0" max="3600" value="5" /></div>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button onclick="applyStorageOptions()">تطبيق إعدادات التخزين</button>
+            <button onclick="clearLocalStorage()">مسح LocalStorage</button>
+          </div>
+        </div>
+
+        <div class="setting-section" style="margin-top:12px;">
+          <h4>لوحة المفاتيح والاختصارات</h4>
+          <div class="small">يمكن إضافة اختصارات مخصصة (مثال: Ctrl+M لتفريغ الذاكرة)</div>
+          <div style="margin-top:8px;">
+            <textarea id="shortcutsJSON" style="width:100%;height:120px;" placeholder='[{"key":"Ctrl+M","action":"mc"}]'></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button onclick="applyShortcuts()">حفظ الاختصارات</button>
+              <button onclick="resetShortcuts()">استعادة الافتراضي</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div>
+        <div class="setting-section">
+          <h4>الإعدادات المتقدمة</h4>
+          <div class="small">تحكم في مُحلِّل التعبير، الأمن، الأداء والمزيد</div>
+          <div style="margin-top:8px;">
+            <label><input type="checkbox" id="allowCustomJS" /> تفعيل وضع المطور: السماح بتنفيذ سكربتات مخصصة (تحذير أمني)</label>
+            <div class="small">عند التفعيل ستظهر حقل لإدخال سكربت JS يمكنه الوصول إلى apiPlugins.register()</div>
+            <div style="margin-top:8px;">
+              <textarea id="customJS" style="width:100%;height:140px;" placeholder="// وضع الكود هنا"></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button onclick="runCustomJS()">تشغيل الكود (مرة واحدة)</button>
+                <button onclick="saveCustomJS()">حفظ الكود</button>
+              </div>
+            </div>
+          </div>
+
+          <hr style="margin:12px 0;" />
+
+          <div>
+            <label class="small">محلل التعابير: <select id="parserMode"><option value="infix">Infix (افتراضي)</option><option value="rpn">RPN</option></select></label>
+          </div>
+          <div style="margin-top:8px;">
+            <label class="small">تحقق الأمان: <select id="safetyLevel"><option value="high">عالي</option><option value="medium">متوسط</option><option value="low">منخفض (غير موصى)</option></select></label>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label class="small">تفعيل دعم الوحدات: <input type="checkbox" id="unitsSupport" /></label>
+            <label class="small" style="margin-right:12px">فاصل الآلاف: <select id="thousandsSep"><option value="none">بدون</option><option value=",">,</option><option value=".">.</option><option value=" ">مسافة</option></select></label>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label class="small">عدد خانات العرض للثوابت: <input type="number" id="constPrecision" min="0" max="30" value="15" /></label>
+          </div>
+        </div>
+
+        <div class="setting-section" style="margin-top:12px;">
+          <h4>إدارة السمات والحفظ</h4>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button onclick="exportAllThemes()">تصدير كل السمات</button>
+            <button onclick="importThemes()">استيراد سمات</button>
+            <button onclick="clearAllThemes()">مسح كل السمات</button>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="small">نموذج الاسم التلقائي للسمات المولدة: <input id="themeAutoName" value="theme-" /></label>
+          </div>
+        </div>
+
+        <div class="setting-section" style="margin-top:12px;">
+          <h4>معاينة السمة الحالية</h4>
+          <div id="themePreview" style="min-height:120px;border-radius:8px;padding:12px;"></div>
+          <div style="margin-top:8px;display:flex;gap:8px;">
+            <button onclick="duplicateCurrentTheme()">تكرار السمة الحالية</button>
+            <button onclick="deleteCurrentTheme()">حذف السمة الحالية</button>
+            <button onclick="renameCurrentTheme()">إعادة تسمية</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+/*
+  Version 5 — إعدادات و سمات بلا حدود (محسّن)
+  التغييرات الرئيسية في هذا الملف:
+  - أضفت ميزات النسخ/اللصق باستخدام الحافظة.
+  - أضفت استيراد/تصدير ذاكرة (memory slots).
+  - دعمت السالب الأحادي (unary minus) في المحلّل.
+  - حسّنت التعامل مع الاختصارات لتشغيل أفعال معرفة في الخريطة (actionMap).
+  - أضفت تصفية التاريخ على العناصر المثبتة (pinned).
+  - إصلاحات صغرى وتجارب مستخدم (وصول، رسائل حالة).
+*/
+
+const state = {
+  displayEl: null, historyEl: null, statusEl: null, miniEl: null,
+  memorySlots: [], lastAnswer: 0, history: [],
+  angleMode: 'RAD', theme: 'auto', precision: '2',
+  themes: {},
+  currentTheme: 'default',
+  autosaveIntervalId: null,
+  settings: {
+    memCount: 3,
+    historyLimit: 500,
+    autosaveSec: 5,
+    implicitMultiply: true,
+    clickSound: false,
+    vibrate: false,
+    parserMode: 'infix',
+    safetyLevel: 'high',
+    unitsSupport: false,
+    thousandsSep: 'none',
+    constPrecision: 15
+  },
+  shortcuts: [],
+  plugins: {},
+  allowCustomJS: false,
+  filterPinnedOnly: false
+};
+
+function $(id){ return document.getElementById(id); }
+function setStatus(msg, ms=1800){ if(state.statusEl){ state.statusEl.textContent = msg; if(ms>0) setTimeout(()=>{ if(state.statusEl.textContent===msg) state.statusEl.textContent='جاهز'; }, ms); } }
+
+document.addEventListener('DOMContentLoaded', ()=> {
+  state.displayEl = $('display');
+  state.historyEl = $('history');
+  state.statusEl = $('status');
+  state.miniEl = $('mini');
+
+  loadAllConfig();
+  ensureMemorySlots(state.settings.memCount || 3);
+  renderMemSlots();
+  renderHistory();
+  updateMini();
+  attachEvents();
+  renderThemeList();
+  renderThemePreview();
+  startAutoSave();
+  // set initial caret
+  state.displayEl.setAttribute('placeholder','أدخل تعبيراً ثم اضغط Enter أو =');
+});
+
+/* ---------- storage ---------- */
+const STORAGE_KEY = 'calc_v5_cfg';
+function loadAllConfig(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) { loadDefaultThemes(); return; }
+    const cfg = JSON.parse(raw);
+    if(cfg.themes) state.themes = cfg.themes;
+    if(cfg.currentTheme) state.currentTheme = cfg.currentTheme;
+    if(cfg.theme) state.theme = cfg.theme;
+    if(cfg.settings) state.settings = Object.assign({}, state.settings, cfg.settings);
+    if(cfg.memorySlots) state.memorySlots = cfg.memorySlots;
+    if(cfg.history) state.history = cfg.history;
+    if(cfg.shortcuts) state.shortcuts = cfg.shortcuts;
+    if(cfg.lastAnswer) state.lastAnswer = cfg.lastAnswer;
+    if(cfg.allowCustomJS) state.allowCustomJS = cfg.allowCustomJS;
+    if(state.currentTheme && state.themes[state.currentTheme]) applyThemeObject(state.themes[state.currentTheme]);
+    $('precision') && ($('precision').value = state.precision || '2');
+    $('implicitMultiply') && ($('implicitMultiply').checked = !!state.settings.implicitMultiply);
+    $('clickSound') && ($('clickSound').checked = !!state.settings.clickSound);
+    $('vibrate') && ($('vibrate').checked = !!state.settings.vibrate);
+    $('memCount') && ($('memCount').value = state.settings.memCount || 3);
+    $('historyLimit') && ($('historyLimit').value = state.settings.historyLimit || 500);
+    $('autosaveSec') && ($('autosaveSec').value = state.settings.autosaveSec || 5);
+    $('safetyLevel') && ($('safetyLevel').value = state.settings.safetyLevel || 'high');
+    $('parserMode') && ($('parserMode').value = state.settings.parserMode || 'infix');
+    $('thousandsSep') && ($('thousandsSep').value = state.settings.thousandsSep || 'none');
+    $('constPrecision') && ($('constPrecision').value = state.settings.constPrecision || 15);
+  }catch(e){
+    console.warn('load config failed', e);
+    loadDefaultThemes();
+  }
+}
+function saveAllConfig(){
+  try{
+    const payload = {
+      themes: state.themes,
+      currentTheme: state.currentTheme,
+      theme: state.theme,
+      settings: state.settings,
+      memorySlots: state.memorySlots,
+      history: state.history,
+      shortcuts: state.shortcuts,
+      lastAnswer: state.lastAnswer,
+      allowCustomJS: state.allowCustomJS
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    setStatus('تم حفظ الإعدادات', 1200);
+  }catch(e){ console.warn('save failed', e); setStatus('فشل الحفظ'); }
+}
+function clearLocalStorage(){
+  if(!confirm('سيتم مسح جميع الإعدادات والذاكرة والتاريخ من LocalStorage. هل أنت متأكد؟')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+/* ---------- themes ---------- */
+function loadDefaultThemes(){
+  state.themes = {
+    default: { name:'default', vars:{
+      bg1:'#4a90e2', bg2:'#9013fe', card:'#ffffffdd', text:'#111', accent:'#4caf50', muted:'#6b6b6b'
+    }},
+    solarized: { name:'solarized', vars:{
+      bg1:'#fdf6e3', bg2:'#eee8d5', card:'#fffef8', text:'#586e75', accent:'#b58900', muted:'#657b83'
+    }},
+    midnight: { name:'midnight', vars:{
+      bg1:'#0f1724', bg2:'#071029', card:'#0b1220', text:'#e6eef6', accent:'#7c3aed', muted:'#95a0b5'
+    }},
+    pastel: { name:'pastel', vars:{
+      bg1:'#ffd6e0', bg2:'#d6f5e3', card:'#ffffff', text:'#2b2b2b', accent:'#ff8fab', muted:'#8a8a8a'
+    }}
+  };
+  state.currentTheme = 'default';
+  applyThemeObject(state.themes[state.currentTheme]);
+  saveAllConfig();
+}
+
+function renderThemeList(){
+  const list = $('themeList');
+  if(!list) return;
+  list.innerHTML = '';
+  for(const key of Object.keys(state.themes)){
+    const th = state.themes[key];
+    const item = document.createElement('div');
+    item.className = 'theme-item' + (key === state.currentTheme ? ' selected' : '');
+    item.textContent = th.name;
+    item.onclick = ()=> { state.currentTheme = key; applyThemeObject(th); renderThemeList(); renderThemePreview(); saveAllConfig(); };
+    list.appendChild(item);
+  }
+}
+
+function applyPresetTheme(name){
+  if(!state.themes[name]) return;
+  state.currentTheme = name;
+  applyThemeObject(state.themes[name]);
+  renderThemeList();
+  saveAllConfig();
+  setStatus('تم تطبيق سمة: ' + name);
+}
+function applyThemeObject(theme){
+  const v = theme.vars || {};
+  if(v.bg1) document.documentElement.style.setProperty('--bg1', v.bg1);
+  if(v.bg2) document.documentElement.style.setProperty('--bg2', v.bg2);
+  if(v.card) document.documentElement.style.setProperty('--card-bg', v.card);
+  if(v.text) document.documentElement.style.setProperty('--text', v.text);
+  if(v.accent) document.documentElement.style.setProperty('--accent', v.accent);
+  if(v.muted) document.documentElement.style.setProperty('--muted', v.muted);
+  state.currentTheme = theme.name;
+  renderThemeList();
+  renderThemePreview();
+}
+
+function createThemeFromPicker(){
+  const name = $('newThemeName').value.trim() || ( $('themeAutoName') ? $('themeAutoName').value + Date.now() : 'theme-'+Date.now());
+  const bg1 = $('c_bg1').value || '#4a90e2';
+  const bg2 = $('c_bg2').value || '#9013fe';
+  const card = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#ffffff';
+  state.themes[name] = { name, vars:{ bg1, bg2, card, text: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() } };
+  renderThemeList();
+  saveAllConfig();
+  setStatus('أضيفت سمة: ' + name);
+}
+
+function generateThemes(){
+  const count = Math.min(5000, Math.max(1, Number($('generateCount').value) || 50));
+  const base = $('themeAutoName').value || 'theme-';
+  for(let i=0;i<count;i++){
+    const name = base + Date.now().toString(36) + '-' + i;
+    const color1 = randomColor();
+    const color2 = randomColor();
+    state.themes[name] = { name, vars:{ bg1:color1, bg2:color2, card:'#ffffffcc', text:'#111' } };
+  }
+  renderThemeList();
+  saveAllConfig();
+  setStatus('توليد ' + count + ' سمة تم إنشاؤها');
+}
+function clearGeneratedThemes(){
+  const keep = ['default','solarized','midnight','pastel'];
+  for(const k of Object.keys(state.themes)){
+    if(!keep.includes(k)) delete state.themes[k];
+  }
+  renderThemeList();
+  saveAllConfig();
+  setStatus('تم مسح السمات المولدة');
+}
+function randomColor(){ return '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'); }
+
+function exportAllThemes(){
+  const blob = new Blob([JSON.stringify(state.themes,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='calc_themes.json'; a.click();
+  setStatus('تم تصدير السمات');
+}
+function importThemes(){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = ()=> {
+    const f = inp.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> {
+      try{
+        const obj = JSON.parse(r.result);
+        if(typeof obj === 'object'){ state.themes = Object.assign({}, state.themes, obj); renderThemeList(); saveAllConfig(); setStatus('تم استيراد السمات'); }
+        else setStatus('تنسيق غير صحيح');
+      }catch(e){ setStatus('خطأ'); }
+    }; r.readAsText(f);
+  };
+  inp.click();
+}
+function clearAllThemes(){ if(!confirm('هل تريد حذف كل السمات؟')) return; state.themes = {}; loadDefaultThemes(); setStatus('تم إعادة السِمات إلى الافتراضي'); }
+
+function renderThemePreview(){
+  const p = $('themePreview');
+  if(!p) return;
+  const cur = state.themes[state.currentTheme] || null;
+  p.innerHTML = '';
+  const box = document.createElement('div');
+  box.style.padding = '10px';
+  box.style.borderRadius = '8px';
+  box.style.background = `linear-gradient(135deg, ${getComputedStyle(document.documentElement).getPropertyValue('--bg1')}, ${getComputedStyle(document.documentElement).getPropertyValue('--bg2')})`;
+  box.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
+  box.textContent = 'معاينة السمة: ' + (cur ? cur.name : 'محدد');
+  p.appendChild(box);
+}
+function duplicateCurrentTheme(){
+  const cur = state.themes[state.currentTheme];
+  if(!cur) { setStatus('لا توجد سمة حالية'); return; }
+  const name = cur.name + '-copy-' + Date.now();
+  state.themes[name] = JSON.parse(JSON.stringify(cur)); state.themes[name].name = name;
+  renderThemeList();
+  saveAllConfig();
+  setStatus('تم تكرار السمة');
+}
+function deleteCurrentTheme(){
+  if(!confirm('حذف السمة الحالية نهائياً؟')) return;
+  delete state.themes[state.currentTheme];
+  state.currentTheme = Object.keys(state.themes)[0] || 'default';
+  applyThemeObject(state.themes[state.currentTheme]);
+  renderThemeList(); saveAllConfig(); setStatus('تم الحذف');
+}
+function renameCurrentTheme(){
+  const newName = prompt('اسم جديد للسمة:', state.currentTheme);
+  if(!newName) return;
+  const obj = state.themes[state.currentTheme];
+  delete state.themes[state.currentTheme];
+  obj.name = newName;
+  state.themes[newName] = obj;
+  state.currentTheme = newName;
+  renderThemeList(); saveAllConfig(); setStatus('تم إعادة التسمية');
+}
+
+/* ---------- layout tweaks ---------- */
+function updateShadow(v){ document.documentElement.style.setProperty('--shadow-color', `rgba(0,0,0,${Math.min(0.4, v/100)})`); setStatus('تم تحديث الظل'); }
+function updateBtnRadius(v){ document.documentElement.style.setProperty('--btn-radius', v+'px'); setStatus('تم تعديل نصف القطر'); }
+function updateFontSize(v){ document.documentElement.style.setProperty('--btn-padding', (10 + (v-12))+'px'); document.documentElement.style.setProperty('font-size', v+'px'); setStatus('تم تعديل حجم الخط'); }
+function updateBtnShape(val){
+  if(val==='rounded'){ document.documentElement.style.setProperty('--btn-radius','10px'); }
+  else if(val==='square'){ document.documentElement.style.setProperty('--btn-radius','2px'); }
+  else if(val==='pill'){ document.documentElement.style.setProperty('--btn-radius','999px'); }
+  setStatus('تم تغيير شكل الأزرار');
+}
+
+/* ---------- Memory slots ---------- */
+function ensureMemorySlots(count){
+  count = Math.max(1, Math.min(500, Number(count)||3));
+  if(!Array.isArray(state.memorySlots)) state.memorySlots = [];
+  while(state.memorySlots.length < count) state.memorySlots.push(0);
+  while(state.memorySlots.length > count) state.memorySlots.pop();
+  state.settings.memCount = count;
+  saveAllConfig();
+}
+function renderMemSlots(){
+  const container = $('memSlots');
+  if(!container) return;
+  container.innerHTML = '';
+  for(let i=0;i<state.memorySlots.length;i++){
+    const slot = document.createElement('div');
+    slot.style.display='flex'; slot.style.gap='6px'; slot.style.alignItems='center';
+    const b1 = document.createElement('button'); b1.textContent = 'M' + (i+1) + ' ←'; b1.onclick = ()=> memStoreSlot(i+1);
+    const b2 = document.createElement('button'); b2.textContent = 'M' + (i+1) + ' →'; b2.onclick = ()=> memRecallSlot(i+1);
+    const label = document.createElement('span'); label.style.minWidth='90px'; label.style.padding='6px'; label.style.border='1px solid rgba(0,0,0,0.06)'; label.style.borderRadius='6px'; label.textContent = String(state.memorySlots[i]);
+    slot.appendChild(b1); slot.appendChild(b2); slot.appendChild(label);
+    container.appendChild(slot);
+  }
+}
+function setMemorySlotsCount(){
+  const n = Number($('memCount').value) || 3;
+  ensureMemorySlots(n);
+  renderMemSlots();
+  saveAllConfig();
+  setStatus('تغير عدد فتحات الذاكرة إلى ' + n);
+}
+
+/* memory ops */
+function memStoreSlot(n){
+  const v = evaluateExpressionSafeCore();
+  if(isNaN(v)){ setStatus('خطأ'); return; }
+  state.memorySlots[n-1] = v;
+  renderMemSlots(); saveAllConfig(); setStatus('M'+n+' ← ' + v);
+}
+function memRecallSlot(n){ insert(String(state.memorySlots[n-1])); setStatus('M'+n+' →'); }
+function mc(){ if(state.memorySlots.length>0){ state.memorySlots[0]=0; renderMemSlots(); saveAllConfig(); setStatus('MC'); } }
+function mr(){ if(state.memorySlots.length>0) insert(String(state.memorySlots[0])); setStatus('MR'); }
+function mplus(){ const v=evaluateExpressionSafeCore(); if(!isNaN(v)){ state.memorySlots[0]+=v; renderMemSlots(); saveAllConfig(); setStatus('M+'); } }
+function mminus(){ const v=evaluateExpressionSafeCore(); if(!isNaN(v)){ state.memorySlots[0]-=v; renderMemSlots(); saveAllConfig(); setStatus('M-'); } }
+function msave(){ const v=evaluateExpressionSafeCore(); if(!isNaN(v)){ state.memorySlots[0]=v; renderMemSlots(); saveAllConfig(); setStatus('MS'); } }
+function openMemManager(){ alert('مدير الذاكرة: يمكنك استيراد/تصدير وتعديل عدد فتحات الذاكرة.'); }
+
+function exportMemory(){
+  const blob = new Blob([JSON.stringify(state.memorySlots,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='calc_memory.json'; a.click();
+  setStatus('تم تصدير الذاكرة');
+}
+function importMemory(){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = ()=> {
+    const f = inp.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> {
+      try{
+        const arr = JSON.parse(r.result);
+        if(Array.isArray(arr)){ state.memorySlots = arr.slice(0, 500); ensureMemorySlots(state.memorySlots.length); renderMemSlots(); saveAllConfig(); setStatus('تم استيراد الذاكرة'); }
+        else setStatus('تنسيق غير صحيح');
+      }catch(e){ setStatus('خطأ'); }
+    }; r.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ---------- History ---------- */
+function addHistory(expr, result){
+  state.history.unshift({expr, result, at: new Date().toISOString(), pinned:false});
+  if(state.history.length > (state.settings.historyLimit || 500)) state.history.length = state.settings.historyLimit;
+  saveAllConfig(); renderHistory();
+}
+function renderHistory(){
+  const h = $('history'); if(!h) return; h.innerHTML = '';
+  const list = state.history;
+  const items = state.filterPinnedOnly ? list.filter(it=>it.pinned) : list;
+  items.forEach((it, idx)=>{
+    const div = document.createElement('div'); div.className='entry'; div.tabIndex = 0;
+    div.innerHTML = `<div style="font-weight:600">${escapeHtml(it.expr)}</div><small>${escapeHtml(String(it.result))} — ${new Date(it.at).toLocaleString()}</small>`;
+    div.onclick = ()=> { state.displayEl.value = it.expr; pushUndo(); setStatus('حُمل التعبير'); };
+    const pin = document.createElement('button'); pin.textContent = it.pinned ? 'unp' : 'pin';
+    pin.onclick = (ev)=>{ ev.stopPropagation(); it.pinned = !it.pinned; saveAllConfig(); renderHistory(); };
+    const cp = document.createElement('button'); cp.textContent = '✂'; cp.onclick = (ev)=>{ ev.stopPropagation(); navigator.clipboard?.writeText(it.expr).then(()=>setStatus('نسخ')); };
+    div.appendChild(pin); div.appendChild(cp);
+    h.appendChild(div);
+  });
+}
+function clearHistory(){ if(!confirm('مسح كل التاريخ؟')) return; state.history = []; saveAllConfig(); renderHistory(); setStatus('تاريخ محو'); }
+function exportHistory(){ const blob = new Blob([JSON.stringify(state.history,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='calc_history.json'; a.click(); setStatus('تم التصدير'); }
+function importHistory(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const arr=JSON.parse(r.result); if(Array.isArray(arr)){ state.history = arr.concat(state.history).slice(0, state.settings.historyLimit || 500); saveAllConfig(); renderHistory(); setStatus('تم الاستيراد'); } }catch(e){ setStatus('خطأ'); } }; r.readAsText(f); }; inp.click(); }
+function togglePinnedOnly(){ state.filterPinnedOnly = !state.filterPinnedOnly; renderHistory(); setStatus(state.filterPinnedOnly ? 'عرض المعلقة فقط' : 'عرض كل التاريخ'); }
+
+/* ---------- Input operations ---------- */
+function pushUndo(){ state.undoStack = state.undoStack || []; state.redoStack = state.redoStack || []; state.undoStack.push(state.displayEl.value); if(state.undoStack.length>500) state.undoStack.shift(); state.redoStack = []; }
+function undo(){ state.undoStack = state.undoStack || []; state.redoStack = state.redoStack || []; if(state.undoStack.length===0) return; state.redoStack.push(state.displayEl.value); state.displayEl.value = state.undoStack.pop(); setStatus('تراجع'); }
+function redo(){ state.undoStack = state.undoStack || []; state.redoStack = state.redoStack || []; if(state.redoStack.length===0) return; state.undoStack.push(state.displayEl.value); state.displayEl.value = state.redoStack.pop(); setStatus('إعادة'); }
+
+function insert(text){
+  pushUndo();
+  const el = state.displayEl; const start = el.selectionStart || el.value.length; const end = el.selectionEnd || start;
+  const newVal = el.value.slice(0,start) + text + el.value.slice(end);
+  el.value = newVal; const pos = start + text.length; el.setSelectionRange(pos,pos); handleClickFeedback();
+}
+function insertFunc(fn){ insert(fn + '('); }
+function insertConst(name){ if(name==='pi') insert('pi'); else if(name==='e') insert('e'); }
+function delChar(){ pushUndo(); const el = state.displayEl; const start = el.selectionStart || el.value.length; const end = el.selectionEnd || start; if(start !== end){ el.value = el.value.slice(0,start) + el.value.slice(end); el.setSelectionRange(start,start); } else if(start>0){ el.value = el.value.slice(0,start-1) + el.value.slice(end); el.setSelectionRange(start-1,start-1); } handleClickFeedback(); }
+function clearEntry(){ pushUndo(); state.displayEl.value=''; setStatus('مسح الإدخال'); }
+function clearAll(){ if(!confirm('هل تريد مسح كل شيء (شاشة، تاريخ، ذاكرة)؟')) return; pushUndo(); state.displayEl.value=''; state.history=[]; state.memorySlots = new Array(state.settings.memCount).fill(0); renderMemSlots(); saveAllConfig(); renderHistory(); setStatus('مسح الكل'); }
+function toggleSign(){
+  const v = state.displayEl.value;
+  if(!v) return;
+  // try to wrap selection or whole value
+  if(v.startsWith('-')) state.displayEl.value = v.slice(1);
+  else state.displayEl.value = '-' + v;
+}
+
+/* ---------- tokenizer, parser, evaluator ---------- */
+function tokenize(expr){
+  expr = String(expr || '').replace(/\s+/g,'');
+  const tokens = []; let i=0;
+  const isDigit = ch => /\d/.test(ch);
+  const isAlpha = ch => /[a-zA-Zπ]/.test(ch);
+  while(i<expr.length){
+    const ch = expr[i];
+
+    // handle unary minus before number (e.g. -(3) or -3)
+    if(ch==='-' && (isDigit(expr[i+1]) || (expr[i+1]==='.' && isDigit(expr[i+2])))){
+      const prev = tokens[tokens.length-1];
+      if(!prev || prev.type==='op' || prev.type==='lparen' || prev.type==='func'){
+        // parse negative number
+        let num = '-'; i++;
+        while(i<expr.length && /[\d.]/.test(expr[i])) { num += expr[i++]; }
+        if(expr[i] && (expr[i]==='e' || expr[i]==='E')){
+          let j=i+1; let part = expr[i];
+          if(expr[j]==='+'||expr[j]==='-'){ part+=expr[j]; j++; }
+          while(j<expr.length && /\d/.test(expr[j])) part += expr[j++];
+          if(/\d/.test(part.slice(-1))) { num += part; i=j; }
+        }
+        tokens.push({type:'number', value:num}); continue;
+      }
+    }
+
+    if(isDigit(ch) || (ch==='.' && isDigit(expr[i+1]))){
+      let num = ch; i++;
+      while(i<expr.length && /[\d.]/.test(expr[i])) { num += expr[i++]; }
+      if(expr[i] && (expr[i]==='e' || expr[i]==='E')){
+        let j=i+1; let part = expr[i];
+        if(expr[j]==='+'||expr[j]==='-'){ part+=expr[j]; j++; }
+        while(j<expr.length && /\d/.test(expr[j])) part += expr[j++];
+        if(/\d/.test(part.slice(-1))) { num += part; i=j; }
+      }
+      tokens.push({type:'number', value:num}); continue;
+    }
+    if(isAlpha(ch)){
+      let id = ch; i++;
+      while(i<expr.length && /[a-zA-Z0-9π]/.test(expr[i])) id+=expr[i++];
+      id = id.toLowerCase();
+      if(id === 'pi' || id === 'π') tokens.push({type:'const', value:'pi'});
+      else if(id === 'e') tokens.push({type:'const', value:'e'});
+      else if(id === 'ans') tokens.push({type:'ans'});
+      else tokens.push({type:'func', value:id});
+      continue;
+    }
+    if(ch === '('){ tokens.push({type:'lparen'}); i++; continue; }
+    if(ch === ')'){ tokens.push({type:'rparen'}); i++; continue; }
+    if(ch === '+'){ tokens.push({type:'op', value:'+'}); i++; continue; }
+    if(ch === '-'){ tokens.push({type:'op', value:'-'}); i++; continue; }
+    if(ch === '*'){ tokens.push({type:'op', value:'*'}); i++; continue; }
+    if(ch === '/'){ tokens.push({type:'op', value:'/'}); i++; continue; }
+    if(ch === '^'){ tokens.push({type:'op', value:'^'}); i++; continue; }
+    if(ch === '%'){ tokens.push({type:'post', value:'percent'}); i++; continue; }
+    if(ch === '!'){ tokens.push({type:'post', value:'fact'}); i++; continue; }
+    i++;
+  }
+
+  if(state.settings.implicitMultiply || $('implicitMultiply')?.checked){
+    const out = [];
+    for(let k=0;k<tokens.length;k++){
+      out.push(tokens[k]);
+      const a = tokens[k]; const b = tokens[k+1]; if(!b) continue;
+      const leftTypes = ['number','const','ans','rparen','post'];
+      const rightTypes = ['lparen','func','const','number','ans'];
+      if(leftTypes.includes(a.type) && rightTypes.includes(b.type)){
+        out.push({type:'op', value:'*'});
+      }
+    }
+    return out;
+  }
+  return tokens;
+}
+function toRPN(tokens){
+  const output=[]; const ops=[];
+  const prec = {'+':2,'-':2,'*':3,'/':3,'^':4}; const rightAssoc={'^':true};
+  tokens.forEach(t=>{
+    if(t.type==='number' || t.type==='const' || t.type==='ans') output.push(t);
+    else if(t.type==='func') ops.push(t);
+    else if(t.type==='post') output.push(t);
+    else if(t.type==='op'){
+      while(ops.length){
+        const top = ops[ops.length-1];
+        if(top.type==='func') output.push(ops.pop());
+        else if(top.type==='op' && (( !rightAssoc[t.value] && prec[top.value] >= prec[t.value]) || ( rightAssoc[t.value] && prec[top.value] > prec[t.value]))){
+          output.push(ops.pop());
+        } else break;
+      }
+      ops.push(t);
+    } else if(t.type==='lparen') ops.push(t);
+    else if(t.type==='rparen'){ while(ops.length && ops[ops.length-1].type!=='lparen') output.push(ops.pop()); if(ops.length && ops[ops.length-1].type==='lparen') ops.pop(); if(ops.length && ops[ops.length-1].type==='func') output.push(ops.pop()); }
+  });
+  while(ops.length) output.push(ops.pop());
+  return output;
+}
+function constValue(name){
+  if(name==='pi') return Number(Math.PI.toFixed(state.settings.constPrecision || 15));
+  if(name==='e') return Number(Math.E.toFixed(state.settings.constPrecision || 15));
+  return NaN;
+}
+function factorial(n){
+  if(n < 0) return NaN; if(Math.floor(n)!==n) return NaN; if(n>170) return Infinity; // prevent overflow
+  let res=1; for(let i=2;i<=n;i++) res*=i; return res;
+}
+function evalRPN(rpn){
+  const stack=[];
+  for(let t of rpn){
+    if(t.type==='number') stack.push(Number(t.value));
+    else if(t.type==='const') stack.push(constValue(t.value));
+    else if(t.type==='ans') stack.push(Number(state.lastAnswer));
+    else if(t.type==='post'){ const a = stack.pop(); if(a===undefined) return NaN; if(t.value==='percent') stack.push(a/100); else if(t.value==='fact') stack.push(factorial(Number(a))); }
+    else if(t.type==='func'){ const a = stack.pop(); if(a===undefined) return NaN; const v = Number(a); const fn = t.value; const toRad = (x)=> state.angleMode==='DEG' ? x * Math.PI / 180 : x;
+      if(fn==='sin') stack.push(Math.sin(toRad(v)));
+      else if(fn==='cos') stack.push(Math.cos(toRad(v)));
+      else if(fn==='tan') stack.push(Math.tan(toRad(v)));
+      else if(fn==='asin') stack.push(state.angleMode==='DEG' ? Math.asin(v)*180/Math.PI : Math.asin(v));
+      else if(fn==='acos') stack.push(state.angleMode==='DEG' ? Math.acos(v)*180/Math.PI : Math.acos(v));
+      else if(fn==='atan') stack.push(state.angleMode==='DEG' ? Math.atan(v)*180/Math.PI : Math.atan(v));
+      else if(fn==='ln') stack.push(Math.log(v));
+      else if(fn==='log') stack.push(Math.log10 ? Math.log10(v) : Math.log(v)/Math.LN10);
+      else if(fn==='sqrt') stack.push(Math.sqrt(v));
+      else if(fn==='cbrt') stack.push(Math.cbrt ? Math.cbrt(v) : Math.sign(v)*Math.pow(Math.abs(v),1/3));
+      else if(fn==='abs') stack.push(Math.abs(v));
+      else if(fn==='exp') stack.push(Math.exp(v));
+      else return NaN;
+    } else if(t.type==='op'){ const b = stack.pop(); const a = stack.pop(); if(a===undefined || b===undefined) return NaN; const an=Number(a), bn=Number(b); if(t.value==='+') stack.push(an+bn); else if(t.value==='-') stack.push(an-bn); else if(t.value==='*') stack.push(an*bn); else if(t.value==='/') stack.push(an/bn); else if(t.value==='^') stack.push(Math.pow(an,bn)); else return NaN; }
+    else return NaN;
+  }
+  if(stack.length !== 1) return NaN;
+  return stack[0];
+}
+function evaluateExpressionSafeCore(expr){
+  try{
+    const e = (typeof expr === 'string' && expr.length>0) ? expr : state.displayEl.value;
+    if(!e) return NaN;
+    const tokens = tokenize(e);
+    const rpn = toRPN(tokens);
+    const res = evalRPN(rpn);
+    if(!isFinite(res)) return NaN;
+    return res;
+  }catch(e){ return NaN; }
+}
+function evaluateAndRecord(){
+  const expr = state.displayEl.value;
+  const res = evaluateExpressionSafeCore(expr);
+  if(isNaN(res)){ setStatus('خطأ'); return null; }
+  state.lastAnswer = res;
+  const display = formatNumber(res);
+  state.displayEl.value = display;
+  addHistory(expr, display);
+  saveAllConfig();
+  setStatus('تم');
+  return res;
+}
+
+/* ---------- formatting ---------- */
+function formatNumber(n){
+  if(typeof n !== 'number' || isNaN(n)) return 'NaN';
+  const p = $('precision') ? $('precision').value : state.precision;
+  if(p === 'auto') return String(n);
+  const pi = parseInt(p,10);
+  const val = Number.isInteger(n) ? String(n) : Number(n).toFixed(pi);
+  const sep = state.settings.thousandsSep || 'none';
+  if(sep === 'none') return val;
+  const parts = val.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, sep === ' ' ? '\u00A0' : sep);
+  return parts.join('.');
+}
+
+/* ---------- calculate etc ---------- */
+function calculate(){ pushUndo(); const res = evaluateAndRecord(); handleClickFeedback(); return res; }
+function reciprocal(){ const v=evaluateExpressionSafeCore(); if(isNaN(v)||v===0){ setStatus('خطأ'); return; } const r = 1/v; state.lastAnswer=r; state.displayEl.value = String(r); addHistory('1/('+state.displayEl.value+')', formatNumber(r)); setStatus('تم'); }
+function randomNumber(){ const r = Math.random(); insert(String(r)); setStatus('rand'); }
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+function lcm(a,b){ if(a===0||b===0) return 0; return Math.abs(a*b)/gcd(a,b); }
+function gcdPrompt(){ const a = prompt('عدد أول'); const b = prompt('عدد ثاني'); if(a===null||b===null) return; const g = gcd(parseInt(a,10)||0, parseInt(b,10)||0); alert('gcd = '+g); setStatus('gcd = '+g); }
+function lcmPrompt(){ const a = prompt('عدد أول'); const b = prompt('عدد ثاني'); if(a===null||b===null) return; const L = lcm(parseInt(a,10)||0, parseInt(b,10)||0); alert('lcm = '+L); setStatus('lcm = '+L); }
+
+/* ---------- settings modal ---------- */
+function openSettings(){ const m = $('settingsModal'); if(!m) return; m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
+function closeSettings(){ const m = $('settingsModal'); if(!m) return; m.classList.remove('open'); m.setAttribute('aria-hidden','true'); saveAllConfig(); }
+function saveSettings(){
+  state.settings.memCount = Number($('memCount').value) || 3;
+  state.settings.historyLimit = Number($('historyLimit').value) || 500;
+  state.settings.autosaveSec = Number($('autosaveSec').value) || 5;
+  state.settings.implicitMultiply = !!($('implicitMultiply') && $('implicitMultiply').checked);
+  state.settings.clickSound = !!($('clickSound') && $('clickSound').checked);
+  state.settings.vibrate = !!($('vibrate') && $('vibrate').checked);
+  state.settings.parserMode = $('parserMode') ? $('parserMode').value : 'infix';
+  state.settings.safetyLevel = $('safetyLevel') ? $('safetyLevel').value : 'high';
+  state.settings.unitsSupport = !!($('unitsSupport') && $('unitsSupport').checked);
+  state.settings.thousandsSep = $('thousandsSep') ? $('thousandsSep').value : 'none';
+  state.settings.constPrecision = Number($('constPrecision') ? $('constPrecision').value : 15);
+  ensureMemorySlots(state.settings.memCount);
+  renderMemSlots();
+  saveAllConfig();
+  setStatus('تم حفظ الإعدادات');
+  closeSettings();
+}
+
+/* ---------- shortcuts JSON ---------- */
+function applyShortcuts(){
+  try{
+    const txt = $('shortcutsJSON').value || '[]';
+    const arr = JSON.parse(txt);
+    if(!Array.isArray(arr)) throw new Error('not array');
+    state.shortcuts = arr;
+    saveAllConfig();
+    setStatus('تم حفظ الاختصارات');
+  }catch(e){ setStatus('خطأ في تركيب JSON'); }
+}
+function resetShortcuts(){ state.shortcuts = []; $('shortcutsJSON').value = ''; saveAllConfig(); setStatus('استعادة الافتراضي'); }
+
+/* ---------- custom JS / plugins ---------- */
+function runCustomJS(){
+  if(!confirm('تشغيل كود مخصص قد يكون خطراً. هل تريد المتابعة؟')) return;
+  if(!($('allowCustomJS') && $('allowCustomJS').checked)){ setStatus('وضع المطور معطل'); return; }
+  const code = $('customJS').value || '';
+  try{
+    const api = {
+      register: (name, obj)=> { state.plugins[name] = obj; setStatus('plugin '+name+' مسجل'); },
+      getState: ()=> JSON.parse(JSON.stringify(state)),
+      setState: (s)=> { Object.assign(state, s); saveAllConfig(); }
+    };
+    const fn = new Function('api', code);
+    fn(api);
+    saveAllConfig();
+    setStatus('تم تشغيل الكود المخصص');
+  }catch(e){ console.error(e); setStatus('خطأ في الكود'); }
+}
+function saveCustomJS(){ state.customJS = $('customJS').value || ''; state.allowCustomJS = !!($('allowCustomJS') && $('allowCustomJS').checked); saveAllConfig(); setStatus('تم حفظ الكود'); }
+
+/* ---------- export/import settings ---------- */
+function exportSettings(){
+  const data = {
+    themes: state.themes,
+    settings: state.settings,
+    memorySlots: state.memorySlots,
+    history: state.history,
+    shortcuts: state.shortcuts
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='calc_settings_v5.json'; a.click();
+  setStatus('تم تصدير الإعدادات');
+}
+function importSettings(){
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
+  inp.onchange = ()=> {
+    const f = inp.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> {
+      try{
+        const obj = JSON.parse(r.result);
+        if(obj.themes) state.themes = obj.themes;
+        if(obj.settings) state.settings = Object.assign({}, state.settings, obj.settings);
+        if(obj.memorySlots) state.memorySlots = obj.memorySlots;
+        if(obj.history) state.history = obj.history;
+        if(obj.shortcuts) state.shortcuts = obj.shortcuts;
+        renderThemeList(); ensureMemorySlots(state.settings.memCount); renderMemSlots(); renderHistory(); saveAllConfig(); setStatus('تم استيراد الإعدادات');
+      }catch(e){ setStatus('خطأ'); }
+    }; r.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ---------- autosave ---------- */
+function startAutoSave(){
+  if(state.autosaveIntervalId) clearInterval(state.autosaveIntervalId);
+  const sec = (state.settings && state.settings.autosaveSec) ? state.settings.autosaveSec : 5;
+  if(sec>0) state.autosaveIntervalId = setInterval(()=> saveAllConfig(), sec*1000);
+}
+
+/* ---------- keyboard and events ---------- */
+function attachEvents(){
+  state.displayEl.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){ e.preventDefault(); calculate(); }
+    if(e.key==='Escape'){ clearEntry(); }
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); }
+    if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='y'){ e.preventDefault(); redo(); }
+  });
+
+  $('implicitMultiply') && $('implicitMultiply').addEventListener('change', (e)=>{ state.settings.implicitMultiply = e.target.checked; saveAllConfig(); setStatus('الضرب الضمني: '+(e.target.checked?'مفعّل':'معطّل')); });
+  $('clickSound') && $('clickSound').addEventListener('change',(e)=>{ state.settings.clickSound = e.target.checked; saveAllConfig(); });
+  $('vibrate') && $('vibrate').addEventListener('change',(e)=>{ state.settings.vibrate = e.target.checked; saveAllConfig(); });
+  $('memCount') && $('memCount').addEventListener('change', ()=> setMemorySlotsCount());
+  $('c_bg1') && ($('c_bg1').value = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#4a90e2');
+  $('c_bg2') && ($('c_bg2').value = getComputedStyle(document.documentElement).getPropertyValue('--bg2').trim() || '#9013fe');
+
+  // actionMap: map simple string actions to functions
+  const actionMap = {
+    mc, mr, mplus, mminus, msave, calculate, clearEntry, clearAll, undo, redo, copyResult, pasteToDisplay
+  };
+
+  window.addEventListener('keydown', (e)=> {
+    const keyName = e.key.length===1 ? e.key : e.key;
+    const key = (e.ctrlKey?'Ctrl+':'') + (e.altKey?'Alt+':'') + (e.shiftKey?'Shift+':'') + keyName;
+    (state.shortcuts || []).forEach(s=>{
+      if(s.key === key){ e.preventDefault(); if(typeof s.action === 'string' && actionMap[s.action]) actionMap[s.action](); else if(typeof s.action === 'function') s.action(); }
+    });
+  });
+
+  if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=> { if(state.theme === 'auto') applyThemeObject(state.themes[state.currentTheme]); });
+  }
+}
+
+/* ---------- extra UI utilities ---------- */
+function applyPresetThemeId(themeId){
+  if(state.themes[themeId]) applyThemeObject(state.themes[themeId]);
+}
+
+function openHelp(){ alert('لوحة إعدادات متقدمة: يمكنك إنشاء آلاف السمات، إدارة الذاكرة، تمكين وضع المطور وتشغيل كود مخصص. استخدم بحذر.'); }
+function resetAll(){ if(!confirm('إعادة ضبط كل الإعدادات (سيُعاد تحميل الصفحة)؟')) return; localStorage.removeItem(STORAGE_KEY); location.reload(); }
+
+function handleClickFeedback(){
+  if(($('clickSound') && $('clickSound').checked) || state.settings.clickSound) { try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=1000; g.gain.value=0.0006; o.start(); setTimeout(()=>{ o.stop(); ctx.close(); }, 30); }catch(e){} }
+  if(($('vibrate') && $('vibrate').checked) || state.settings.vibrate) { if(navigator.vibrate) navigator.vibrate(8); }
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ---------- quick helpers ---------- */
+function saveSettingsQuick(){ saveSettings(); }
+function applyPreset(p){ if(p==='solarized') applyPresetTheme('solarized'); else if(p==='midnight') applyPresetTheme('midnight'); }
+
+/* ---------- finalize ---------- */
+function updateMini(){ $('mini').textContent = state.angleMode; }
+function toggleAngle(){ state.angleMode = state.angleMode === 'RAD' ? 'DEG' : 'RAD'; updateMini(); saveAllConfig(); setStatus('وضع الزاوية: '+state.angleMode); }
+function toggleTheme(){ if(state.theme === 'auto') state.theme = 'dark'; else if(state.theme === 'dark') state.theme = 'light'; else state.theme = 'auto'; applyThemeObject(state.themes[state.currentTheme]); setStatus('تم تبديل السمة'); saveAllConfig(); }
+function setPrecision(v){ state.precision = v; saveAllConfig(); setStatus('تم تغيير الدقة'); }
+
+/* ---------- clipboard helpers ---------- */
+async function copyResult(){
+  try{
+    const val = state.displayEl.value || String(state.lastAnswer || '');
+    await navigator.clipboard.writeText(val);
+    setStatus('نسخ إلى الحافظة');
+  }catch(e){ setStatus('فشل النسخ'); }
+}
+async function pasteToDisplay(){
+  try{
+    const txt = await navigator.clipboard.readText();
+    if(txt) { insert(txt); setStatus('لصق'); }
+    else setStatus('لا يوجد نص في الحافظة');
+  }catch(e){ setStatus('فشل اللصق'); }
+}
+
+/* expose api */
+window.apiCalc = {
+  getState: ()=> JSON.parse(JSON.stringify(state)),
+  applyThemeObject,
+  saveAllConfig,
+  loadAllConfig,
+  evaluateExpressionSafeCore
+};
+
+</script>
+</body>
+</html>
